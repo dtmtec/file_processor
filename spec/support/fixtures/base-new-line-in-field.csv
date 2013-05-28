@@ -1,0 +1,9 @@
+A;B;C
+"This is
+a field
+
+with new lines";This one has no new line;"But this one has
+also
+
+some new lines"
+Now we have a new row;With data;And more data
