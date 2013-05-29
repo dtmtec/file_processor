@@ -1,5 +1,8 @@
 require "bundler/setup"
 
+require 'simplecov'
+SimpleCov.start
+
 Bundler.require :default
 
 root = File.expand_path('../..', __FILE__)
