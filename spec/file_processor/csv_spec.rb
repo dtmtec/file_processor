@@ -103,6 +103,14 @@ describe FileProcessor::CSV do
         end
       end
     end
+
+    context "when a block is passed" do
+      let(:filename) { fixture('base-with-lines-with-no-data.csv') }
+
+      it "returns the number of lines for which the block evaluates to true, properly handling lines with no data" do
+        processor.count { |row| !row.first.nil? }.should eq(3)
+      end
+    end
   end
 
   describe "#encoding" do

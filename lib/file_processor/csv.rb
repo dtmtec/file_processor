@@ -13,10 +13,12 @@ module FileProcessor
       super(::CSV.new(tempfile, @options))
     end
 
-    def count
+    def count(&block)
       rewind
       super do |row|
-        !skip_blanks? || row.any? { |column| !column.nil? && !column.empty? }
+        block_result = !block_given? || block.call(row)
+
+        (!skip_blanks? || row.any? { |column| !column.nil? && !column.empty? }) && block_result
       end
     ensure
       rewind
