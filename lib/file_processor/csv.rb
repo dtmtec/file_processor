@@ -1,35 +1,58 @@
 module FileProcessor
-  class CSV
-    def initialize(filename, options)
+  class CSV < SimpleDelegator
+    def initialize(filename, options={})
       @filename = filename
+      @gzipped  = options.delete(:gzipped)
       @options  = default_options.merge(options)
 
+      @options[:col_sep]  ||= detect_column_separator
       @options[:encoding] ||= detect_encoding
 
-      @csv = ::CSV.new(io, @options)
-    end
-
-    def col_sep
-      @csv.col_sep
-    end
-
-    def encoding
-      @csv.encoding
+      super(::CSV.new(io, @options))
     end
 
     def count
-      @csv.rewind
-      @csv.count do |row|
-        !@csv.skip_blanks? || row.any? { |column| !column.nil? && !column.empty? }
+      rewind
+      super do |row|
+        !skip_blanks? || row.any? { |column| !column.nil? && !column.empty? }
       end
     ensure
-      @csv.rewind
+      rewind
+    end
+
+    def gzipped?
+      @gzipped
     end
 
     private
 
     def io
-      @io ||= ::Kernel.open(@filename, "rb")
+      @io ||= load_with('rb')
+    end
+
+    def detect_compression?
+      @gzipped.nil?
+    end
+
+    def load_with(mode)
+      decompress(::Kernel.open(@filename, mode))
+    end
+
+    def decompress(loaded_io)
+      if detect_compression? || gzipped?
+        Zlib::GzipReader.open(loaded_io).tap do |compressed_io|
+          compressed_io.getc # attempt to read from a compressed io
+          compressed_io.rewind
+          @gzipped = true
+        end
+      else
+        @gzipped = false
+        loaded_io
+      end
+    rescue Zlib::Error
+      # not a compressed io, just returning the loaded io instead
+      @gzipped = false
+      loaded_io
     end
 
     # We open the file and try to read each line of it, if there is an
@@ -39,14 +62,14 @@ module FileProcessor
     # it to UTF-8. Though its ugly, this was the only way to detect whether
     # a file was using one of these encodings.
     def detect_encoding
-      utf_io = ::Kernel.open(io, 'r:utf-8')
+      utf_io = load_with('r:utf-8')
 
       ::CSV.new(utf_io, @options).each {}
 
       @io = utf_io
       Encoding.find('utf-8')
     rescue ArgumentError
-      @io = ::Kernel.open(io, 'r:iso-8859-1:utf-8')
+      @io = load_with('r:iso-8859-1:utf-8')
       Encoding.find('iso-8859-1')
     ensure
       io.rewind
@@ -60,7 +83,6 @@ module FileProcessor
 
     def default_options
       {
-        col_sep: detect_column_separator,
         skip_blanks: true
       }
     end

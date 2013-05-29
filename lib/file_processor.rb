@@ -1,6 +1,7 @@
 require "file_processor/version"
 require "delegate"
 require "csv"
+require "zlib"
 
 module FileProcessor
 end

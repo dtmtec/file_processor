@@ -6,6 +6,10 @@ describe FileProcessor::CSV do
 
   subject(:processor) { FileProcessor::CSV.new(open(filename), options) }
 
+  it "delegates to a CSV instance" do
+    processor.__getobj__.should be_a(::CSV)
+  end
+
   describe "#col_sep" do
     context "when it is not given" do
       context "and the first line of the file has more than one header column separated with a semi-colon" do
@@ -90,11 +94,23 @@ describe FileProcessor::CSV do
       end
     end
 
+    it "can iterate through all of its contents without raising an error" do
+      expect {
+        processor.each {}
+      }.to_not raise_error
+    end
+
     context "when the file can be read in utf-8" do
       let(:filename) { fixture('base-utf-8.csv') }
 
       it "properly detects it" do
         processor.encoding.should eq(Encoding.find('utf-8'))
+      end
+
+      it "can iterate through all of its contents without raising an error" do
+        expect {
+          processor.each {}
+        }.to_not raise_error
       end
     end
 
@@ -104,6 +120,80 @@ describe FileProcessor::CSV do
 
         it "properly detects it, transcoding it to utf-8" do
           processor.encoding.should eq(Encoding.find('utf-8'))
+        end
+
+        it "can iterate through all of its contents without raising an error" do
+          expect {
+            processor.each {}
+          }.to_not raise_error
+        end
+
+        context "and no look-ahead is used" do
+          let(:options)  { { row_sep: "\n" } }
+
+          it "properly detects it, transcoding it to utf-8" do
+            processor.encoding.should eq(Encoding.find('utf-8'))
+          end
+
+          it "can iterate through all of its contents without raising an error" do
+            expect {
+              processor.each {}
+            }.to_not raise_error
+          end
+        end
+      end
+    end
+  end
+
+  describe "gzip support" do
+    let(:filename) { fixture('base.csv.gz') }
+
+    it "detects that the file is gzipped and decompress it" do
+      processor.shift.should eq(['A', 'B', 'C']) # first line decompressed
+    end
+
+    it { should be_gzipped }
+
+    context "when { gzipped: false } options is passed" do
+      let(:options)  { { gzipped: false } }
+
+      context "and the file is not gzipped" do
+        let(:filename) { fixture('base.csv') }
+
+        it { should_not be_gzipped }
+
+        it "does not raise an error" do
+          expect {
+            processor.shift
+          }.to_not raise_error
+        end
+      end
+
+      context "and the file is gzipped" do
+        it "does not attempt to detect it, raising an error when reading" do
+          processor.shift.should_not eq(['A', 'B', 'C'])
+        end
+      end
+    end
+
+    context "when { gzipped: true } option is passed" do
+      let(:options)  { { gzipped: true } }
+
+      context "and the file is not gzipped" do
+        let(:filename) { fixture('base.csv') }
+
+        it { should_not be_gzipped }
+
+        it "does not raise an error" do
+          expect {
+            processor.shift
+          }.to_not raise_error
+        end
+      end
+
+      context "and the file is gzipped" do
+        it "properly assumes that the file is gzipped and decompress it" do
+          processor.shift.should eq(['A', 'B', 'C']) # first line decompressed
         end
       end
     end
