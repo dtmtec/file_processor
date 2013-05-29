@@ -1,14 +1,16 @@
 module FileProcessor
   class CSV < SimpleDelegator
     def initialize(filename, options={})
-      @filename = filename
-      @gzipped  = options.delete(:gzipped)
-      @options  = default_options.merge(options)
+      @gzipped      = options.delete(:gzipped)
 
-      @options[:col_sep]  ||= detect_column_separator
+      load(filename, options.delete(:open_options))
+
+      @options      = default_options.merge(options)
+
       @options[:encoding] ||= detect_encoding
+      @options[:col_sep]  ||= detect_column_separator
 
-      super(::CSV.new(io, @options))
+      super(::CSV.new(tempfile, @options))
     end
 
     def count
@@ -26,23 +28,26 @@ module FileProcessor
 
     private
 
-    def io
-      @io ||= load_with('rb')
-    end
-
     def detect_compression?
       @gzipped.nil?
     end
 
-    def load_with(mode)
-      decompress(::Kernel.open(@filename, mode))
+    def load(filename, open_options)
+      loaded_io = decompress(::Kernel.open(filename, 'rb', open_options || {}))
+      loaded_io.rewind
+
+      loaded_io.each do |line|
+        tempfile.write(line)
+      end
+    ensure
+      tempfile.close
+      loaded_io.close
     end
 
     def decompress(loaded_io)
       if detect_compression? || gzipped?
-        Zlib::GzipReader.open(loaded_io).tap do |compressed_io|
-          compressed_io.getc # attempt to read from a compressed io
-          compressed_io.rewind
+        Zlib::GzipReader.open(loaded_io).tap do |decompressed_io|
+          decompressed_io.getc # attempt to read from a compressed io
           @gzipped = true
         end
       else
@@ -62,29 +67,34 @@ module FileProcessor
     # it to UTF-8. Though its ugly, this was the only way to detect whether
     # a file was using one of these encodings.
     def detect_encoding
-      utf_io = load_with('r:utf-8')
+      tempfile.reopen('r:utf-8')
 
-      ::CSV.new(utf_io, @options).each {}
+      tempfile.each do |line|
+        line.split(';')
+      end
 
-      @io = utf_io
       Encoding.find('utf-8')
     rescue ArgumentError
-      @io = load_with('r:iso-8859-1:utf-8')
+      tempfile.reopen('r:iso-8859-1:utf-8')
       Encoding.find('iso-8859-1')
     ensure
-      io.rewind
+      tempfile.rewind
     end
 
     def detect_column_separator
-      @col_sep = io.gets.split(';').size > 1 ? ';' : ','
+      @col_sep = tempfile.gets.split(';').size > 1 ? ';' : ','
     ensure
-      io.rewind
+      tempfile.rewind
     end
 
     def default_options
       {
         skip_blanks: true
       }
+    end
+
+    def tempfile
+      @tempfile ||= FileProcessor::Tempfile.new
     end
   end
 end

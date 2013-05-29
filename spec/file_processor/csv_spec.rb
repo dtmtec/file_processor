@@ -33,6 +33,24 @@ describe FileProcessor::CSV do
           processor.col_sep.should eq(',')
         end
       end
+
+      context "and the file has non-ascii characters in its first line" do
+        context "in UTF-8" do
+          let(:filename) { fixture('base-non-ascii-characters-in-header-utf-8.csv') }
+
+          it "detects it properly" do
+            processor.col_sep.should eq(';')
+          end
+        end
+
+        context "in ISO-8859-1" do
+          let(:filename) { fixture('base-non-ascii-characters-in-header-iso-8859-1.csv') }
+
+          it "detects it properly" do
+            processor.col_sep.should eq(';')
+          end
+        end
+      end
     end
 
     context "when it is given" do
@@ -154,6 +172,16 @@ describe FileProcessor::CSV do
 
     it { should be_gzipped }
 
+    context "when the file is in ISO-8859-1 encoding" do
+      let(:filename) { fixture('base-iso-8859-1.csv.gz') }
+
+      it "detects that the file is gzipped and decompress it" do
+        processor.shift.should eq(['A', 'B', 'C']) # first line decompressed
+      end
+
+      it { should be_gzipped }
+    end
+
     context "when { gzipped: false } options is passed" do
       let(:options)  { { gzipped: false } }
 
@@ -170,7 +198,7 @@ describe FileProcessor::CSV do
       end
 
       context "and the file is gzipped" do
-        it "does not attempt to detect it, raising an error when reading" do
+        it "does not attempt to detect it, reading data as it were UTF-8" do
           processor.shift.should_not eq(['A', 'B', 'C'])
         end
       end

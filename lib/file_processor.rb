@@ -2,10 +2,12 @@ require "file_processor/version"
 require "delegate"
 require "csv"
 require "zlib"
+require "tempfile"
 
 module FileProcessor
 end
 
+require "file_processor/temp_file"
 require "file_processor/csv"
 
 ### API 1
