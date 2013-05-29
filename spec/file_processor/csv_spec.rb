@@ -4,7 +4,7 @@ describe FileProcessor::CSV do
   let(:filename) { fixture('base.csv') }
   let(:options) { {} }
 
-  subject(:processor) { FileProcessor::CSV.new(open(filename), options) }
+  subject(:processor) { FileProcessor::CSV.new(filename, options) }
 
   it "delegates to a CSV instance" do
     processor.__getobj__.should be_a(::CSV)
@@ -231,6 +231,25 @@ describe FileProcessor::CSV do
         it "properly assumes that the file is gzipped and decompress it" do
           processor.shift.should eq(['A', 'B', 'C']) # first line decompressed
         end
+      end
+    end
+  end
+
+  describe ".open" do
+    subject(:processor) { mock(FileProcessor::CSV, close: true) }
+    before { FileProcessor::CSV.stub!(:new).with(filename, options).and_return(processor) }
+
+    context "without a block" do
+      it "creates a new instance and returns it" do
+        FileProcessor::CSV.open(filename, options).should eq(processor)
+      end
+    end
+
+    context "with a block" do
+      it "creates a new instance and returns it" do
+        expect { |block|
+          FileProcessor::CSV.open(filename, options, &block)
+        }.to yield_with_args(processor)
       end
     end
   end

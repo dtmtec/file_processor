@@ -1,5 +1,19 @@
 module FileProcessor
   class CSV < SimpleDelegator
+    def self.open(*args)
+      instance = new(*args)
+
+      if block_given?
+        begin
+          yield instance
+        ensure
+          instance.close if instance
+        end
+      else
+        instance
+      end
+    end
+
     def initialize(filename, options={})
       @gzipped      = options.delete(:gzipped)
 
