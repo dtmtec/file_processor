@@ -2,6 +2,7 @@ require "file_processor/version"
 require "delegate"
 require "csv"
 require "zlib"
+require "open-uri"
 require "tempfile"
 
 module FileProcessor
