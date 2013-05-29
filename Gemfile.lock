@@ -16,6 +16,7 @@ GEM
     diff-lcs (1.2.4)
     json (1.7.7)
     multi_json (1.7.4)
+    rake (10.0.4)
     rspec (2.14.0.rc1)
       rspec-core (= 2.14.0.rc1)
       rspec-expectations (= 2.14.0.rc1)
@@ -36,5 +37,6 @@ DEPENDENCIES
   debugger
   file_processor!
   json (~> 1.7.7)
+  rake
   rspec (~> 2.14.0.rc1)
   simplecov
