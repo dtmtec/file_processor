@@ -116,6 +116,10 @@ describe FileProcessor::CSV do
   end
 
   describe "#each" do
+    it "returns an enumerator when called without a block" do
+      processor.each.should be_a(Enumerator)
+    end
+
     context "when the file has lines with no data" do
       let(:filename) { fixture('base-with-lines-with-no-data.csv') }
 
