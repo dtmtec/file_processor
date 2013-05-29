@@ -20,10 +20,20 @@ Or install it yourself as:
 
 Use it as you would use Ruby's CSV:
 
-    csv = FileProcessor::CSV.new(filename, options)
-    csv.each do |row|
-      # process row here
-    end
+    FileProcessor::CSV.open(filename, options) do |csv|
+      csv.each do |row|
+        # process row here
+      end
+    end # automatically closes the file
+
+FileProcessor::CSV is just a wrapper around Ruby's CSV, so you can manipulate it as you would manipulate Ruby's CSV.
+
+Here are the added features:
+
+* Auto-detect encoding of UTF-8 and ISO-8859-1 (Latin1) files.
+* Auto-detect the column separator (`col_sep` option) when not given.
+* Skip lines without data when `skip_blank` is `true`, which is turned on by default. This means that count will not take these lines into account. Also skips them when iterating through lines.
+* Detects if a file is gzipped, and decompress it for you automatically.
 
 ## Contributing
 
