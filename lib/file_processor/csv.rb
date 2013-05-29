@@ -68,10 +68,7 @@ module FileProcessor
     # a file was using one of these encodings.
     def detect_encoding
       tempfile.reopen('r:utf-8')
-
-      tempfile.each do |line|
-        line.split(';')
-      end
+      tempfile.each(&:split) # raises ArgumentError when it has non-ascii characters that are not in UTF-8
 
       Encoding.find('utf-8')
     rescue ArgumentError
