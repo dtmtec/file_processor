@@ -35,7 +35,7 @@ describe FileProcessor::Tempfile do
     end
 
     it "reopens the path with the given mode" do
-      temp_file.stub!(:path).and_return(generated_path)
+      temp_file.stub(:path).and_return(generated_path)
       File.should_receive(:open).with(generated_path, 'r:utf-8', 384)
       temp_file.reopen('r:utf-8')
     end

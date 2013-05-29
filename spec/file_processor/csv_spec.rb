@@ -67,11 +67,6 @@ describe FileProcessor::CSV do
       processor.count.should eq(5)
     end
 
-    it "works even when called multiple times, since it rewinds the io file" do
-      processor.count
-      processor.count.should eq(5)
-    end
-
     context "when the file has new line characters in a field, but it is properly quoted" do
       let(:filename) { fixture('base-new-line-in-field.csv') }
 
@@ -109,6 +104,35 @@ describe FileProcessor::CSV do
 
       it "returns the number of lines for which the block evaluates to true, properly handling lines with no data" do
         processor.count { |row| !row.first.nil? }.should eq(3)
+      end
+    end
+  end
+
+  describe "#total_count" do
+    it "works as count, but returns all rows, even when called multiple times, since it rewinds the io file" do
+      processor.total_count
+      processor.total_count.should eq(5)
+    end
+  end
+
+  describe "#each" do
+    context "when the file has lines with no data" do
+      let(:filename) { fixture('base-with-lines-with-no-data.csv') }
+
+      it "does not yields these lines" do
+        expect { |block|
+          processor.each(&block)
+        }.to yield_control.exactly(5).times
+      end
+
+      context "but skip_blanks is false" do
+        let(:options) { { skip_blanks: false } }
+
+        it "yields these lines" do
+          expect { |block|
+            processor.each(&block)
+          }.to yield_control.exactly(7).times
+        end
       end
     end
   end
@@ -236,8 +260,8 @@ describe FileProcessor::CSV do
   end
 
   describe ".open" do
-    subject(:processor) { mock(FileProcessor::CSV, close: true) }
-    before { FileProcessor::CSV.stub!(:new).with(filename, options).and_return(processor) }
+    subject(:processor) { double(FileProcessor::CSV, close: true) }
+    before { FileProcessor::CSV.stub(:new).with(filename, options).and_return(processor) }
 
     context "without a block" do
       it "creates a new instance and returns it" do

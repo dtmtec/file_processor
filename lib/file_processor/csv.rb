@@ -1,5 +1,8 @@
 module FileProcessor
   class CSV < SimpleDelegator
+    include Enumerable
+
+    # Opens a file and yields it, ensuring that it is properly closed.
     def self.open(*args)
       instance = new(*args)
 
@@ -27,17 +30,33 @@ module FileProcessor
       super(::CSV.new(tempfile, @options))
     end
 
-    def count(&block)
+    # Returns the number of rows in the file, whether it has
+    # already been read or not
+    def total_count(&block)
       rewind
-      super do |row|
-        block_result = !block_given? || block.call(row)
-
-        (!skip_blanks? || row.any? { |column| !column.nil? && !column.empty? }) && block_result
-      end
+      count(&block)
     ensure
       rewind
     end
 
+    #
+    # Yields each row of the data source in turn, skipping blanks and rows with no data.
+    #
+    # Support for Enumerable.
+    #
+    # The data source must be open for reading.
+    #
+    def each
+      if block_given?
+        while row = shift
+          yield row unless skip_blanks? && row_with_no_data?(row)
+        end
+      else
+        to_enum
+      end
+    end
+
+    # Returns true when the file is gzipped, false otherwise
     def gzipped?
       @gzipped
     end
@@ -46,6 +65,10 @@ module FileProcessor
 
     def detect_compression?
       @gzipped.nil?
+    end
+
+    def row_with_no_data?(row)
+      row.all? { |column| column.nil? || column.empty? }
     end
 
     def load(filename, open_options)
