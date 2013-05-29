@@ -1,5 +1,7 @@
 # FileProcessor
 
+[![Build Status](https://travis-ci.org/dtmconsultoria/file_processor.png)](https://travis-ci.org/dtmconsultoria/file_processor)
+
 A more powerful CSV file processor
 
 ## Installation
