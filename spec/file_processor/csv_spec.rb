@@ -263,6 +263,110 @@ describe FileProcessor::CSV do
     end
   end
 
+  describe "#process_range" do
+    it "yields every line of the file by default" do
+      expect { |block|
+        processor.process_range(&block)
+      }.to yield_control.exactly(5).times
+    end
+
+    it "yields the row and its index" do
+      expect { |block|
+        processor.process_range(&block)
+      }.to yield_successive_args(
+        [["A",  "B",  "C"],  0],
+        [["a1", "b1", "c1"], 1],
+        [["a2", "b2", "c2"], 2],
+        [["a3", "b3", "c3"], 3],
+        [["a4", "b4", "c4"], 4]
+      )
+    end
+
+    it "rewinds the file, so it can be called multiple times" do
+      processor.process_range {}
+
+      expect { |block|
+        processor.process_range(&block)
+      }.to yield_successive_args(
+        [["A",  "B",  "C"],  0],
+        [["a1", "b1", "c1"], 1],
+        [["a2", "b2", "c2"], 2],
+        [["a3", "b3", "c3"], 3],
+        [["a4", "b4", "c4"], 4]
+      )
+    end
+
+    context "when an offset is given" do
+      let(:offset) { 2 }
+
+      it "starts from this offset" do
+        expect { |block|
+          processor.process_range(offset: offset, &block)
+        }.to yield_successive_args(
+          [["a2", "b2", "c2"], 2],
+          [["a3", "b3", "c3"], 3],
+          [["a4", "b4", "c4"], 4]
+        )
+      end
+
+      context "and it is equal to the number of lines of the file" do
+        let(:offset) { processor.count }
+
+        it "does not yield" do
+          expect { |block|
+            processor.process_range(offset: offset, &block)
+          }.to_not yield_control
+        end
+      end
+
+      context "and it is greater than to the number of lines of the file" do
+        let(:offset) { processor.count + 1 }
+
+        it "does not yield" do
+          expect { |block|
+            processor.process_range(offset: offset, &block)
+          }.to_not yield_control
+        end
+      end
+    end
+
+    context "when a limit is given" do
+      let(:limit) { 2 }
+
+      it "yields only the number of rows given" do
+        expect { |block|
+          processor.process_range(limit: limit, &block)
+        }.to yield_successive_args(
+          [["A",  "B",  "C"],  0],
+          [["a1", "b1", "c1"], 1]
+        )
+      end
+
+      context "with zero" do
+        let(:limit) { 0 }
+
+        it "does not yield" do
+          expect { |block|
+            processor.process_range(limit: limit, &block)
+          }.to_not yield_control
+        end
+      end
+
+      context "with an offset" do
+        let(:offset) { 2 }
+
+        it "yields only the number of rows given, from the given offset" do
+          expect { |block|
+            processor.process_range(offset: offset, limit: limit, &block)
+          }.to yield_successive_args(
+            [["a2", "b2", "c2"], 2],
+            [["a3", "b3", "c3"], 3]
+          )
+        end
+      end
+    end
+  end
+
   describe ".open" do
     subject(:processor) { double(FileProcessor::CSV, close: true) }
     before { FileProcessor::CSV.stub(:new).with(filename, options).and_return(processor) }

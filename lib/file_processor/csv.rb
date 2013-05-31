@@ -30,8 +30,9 @@ module FileProcessor
       super(::CSV.new(tempfile, @options))
     end
 
-    # Returns the number of rows in the file, whether it has
-    # already been read or not
+    # Counts the number of rows in the file, even if it has already been read
+    #
+    # @return [ Integer ] the number of rows in the file
     def total_count(&block)
       rewind
       count(&block)
@@ -54,6 +55,36 @@ module FileProcessor
       else
         to_enum
       end
+    end
+
+    # Process a range of lines in the CSV file.
+    #
+    # @example Process 1000 lines starting from the line 2000
+    #   csv.process_range(offset: 2000, limit: 1000) do |row, index|
+    #     # process range here
+    #   end
+    #
+    # @param [ Hash ] options A hash with offset and/or limit
+    #
+    # @option options [ Integer ] :offset The offset from which the process should start
+    # @option options [ Integer ] :limit  The number of rows to process
+    #
+    # @return [ Enumerable ] CSV's enumerable
+    def process_range(options={})
+      options ||= {}
+
+      offset = options[:offset] || 0
+      limit  = options[:limit]  || -1
+
+      rewind
+      each_with_index do |row, index|
+        next if index < offset
+        break if limit >= 0 && index >= offset + limit
+
+        yield row, index
+      end
+    ensure
+      rewind
     end
 
     # Returns true when the file is gzipped, false otherwise

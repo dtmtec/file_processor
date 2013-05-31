@@ -32,6 +32,14 @@ Use it as you would use Ruby's CSV:
 
 FileProcessor::CSV is just a wrapper around Ruby's CSV, so you can manipulate it as you would manipulate Ruby's CSV.
 
+You can also use `FileProcessor::CSV#process_range` to process a range in the file:
+
+    FileProcessor::CSV.open(filename, options) do |csv|
+      csv.process_range(offset: 2000, limit: 1000) do |row, index|
+        # yields 1000 rows starting from line 2000 (i.e., from line 2000 to line 2999)
+      end
+    end # automatically closes the file
+
 Here are the added features:
 
 * Auto-detect encoding of UTF-8 and ISO-8859-1 (Latin1) files.
