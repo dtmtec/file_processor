@@ -6,6 +6,8 @@ A more powerful CSV file processor
 
 ## Installation
 
+FileProcessor uses the new CSV library introduced in Ruby 1.9.3, thus it is only compatible with this Ruby version.
+
 Add this line to your application's Gemfile:
 
     gem 'file_processor'
