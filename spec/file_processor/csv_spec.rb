@@ -97,6 +97,14 @@ describe FileProcessor::CSV do
           processor.count.should eq(7)
         end
       end
+
+      context "and { headers: true } is passed" do
+        let(:options) { { headers: true } }
+
+        it "does not count these lines, as well as the header" do
+          processor.count.should eq(4)
+        end
+      end
     end
 
     context "when a block is passed" do
@@ -136,6 +144,16 @@ describe FileProcessor::CSV do
           expect { |block|
             processor.each(&block)
           }.to yield_control.exactly(7).times
+        end
+      end
+
+      context "and { headers: true } is passed" do
+        let(:options) { { headers: true } }
+
+        it "does not yields these lines, as well as the header" do
+          expect { |block|
+            processor.each(&block)
+          }.to yield_control.exactly(4).times # header do not count here
         end
       end
     end

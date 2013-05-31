@@ -99,7 +99,10 @@ module FileProcessor
     end
 
     def row_with_no_data?(row)
-      row.all? { |column| column.nil? || column.empty? }
+      row.all? do |column|
+        column = column.last if column.is_a?(Array)
+        column.nil? || column.empty?
+      end
     end
 
     def load(filename, open_options)
