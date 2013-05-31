@@ -27,6 +27,8 @@ module FileProcessor
       @options      = default_options.merge(options)
 
       @options[:encoding] ||= detect_encoding
+      tempfile.reopen(detected_mode) if tempfile.closed?
+
       @options[:col_sep]  ||= detect_column_separator
 
       super(::CSV.new(tempfile, @options))
@@ -153,6 +155,14 @@ module FileProcessor
       @detected_encoding = Encoding.find('iso-8859-1')
     ensure
       tempfile.rewind
+    end
+
+    def detected_utf_8?
+      detected_encoding == Encoding.find('utf-8')
+    end
+
+    def detected_mode
+      detected_utf_8? ? 'r:utf-8' : 'r:iso-8859-1:utf-8'
     end
 
     def detect_column_separator
