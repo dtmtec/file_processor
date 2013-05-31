@@ -17,6 +17,8 @@ module FileProcessor
       end
     end
 
+    attr_accessor :detected_encoding
+
     def initialize(filename, options={})
       @gzipped      = options.delete(:gzipped)
 
@@ -143,10 +145,10 @@ module FileProcessor
       tempfile.reopen('r:utf-8')
       tempfile.each(&:split) # raises ArgumentError when it has non-ascii characters that are not in UTF-8
 
-      Encoding.find('utf-8')
+      @detected_encoding = Encoding.find('utf-8')
     rescue ArgumentError
       tempfile.reopen('r:iso-8859-1:utf-8')
-      Encoding.find('iso-8859-1')
+      @detected_encoding = Encoding.find('iso-8859-1')
     ensure
       tempfile.rewind
     end

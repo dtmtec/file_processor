@@ -159,21 +159,25 @@ describe FileProcessor::CSV do
     end
   end
 
-  describe "#encoding" do
-    context "when the file is in US-ASCII" do
-      it "reads it with utf-8" do
-        processor.encoding.should eq(Encoding.find('utf-8'))
-      end
-    end
-
+  describe "encoding" do
     it "can iterate through all of its contents without raising an error" do
       expect {
         processor.each {}
       }.to_not raise_error
     end
 
+    context "when the file is in US-ASCII" do
+      its(:detected_encoding) { should eq(Encoding.find('utf-8')) }
+
+      it "reads it with utf-8" do
+        processor.encoding.should eq(Encoding.find('utf-8'))
+      end
+    end
+
     context "when the file can be read in utf-8" do
       let(:filename) { fixture('base-utf-8.csv') }
+
+      its(:detected_encoding) { should eq(Encoding.find('utf-8')) }
 
       it "properly detects it" do
         processor.encoding.should eq(Encoding.find('utf-8'))
@@ -190,6 +194,8 @@ describe FileProcessor::CSV do
       context "but it can be read in iso-8859-1" do
         let(:filename) { fixture('base-iso-8859-1.csv') }
 
+        its(:detected_encoding) { should eq(Encoding.find('iso-8859-1')) }
+
         it "properly detects it, transcoding it to utf-8" do
           processor.encoding.should eq(Encoding.find('utf-8'))
         end
@@ -202,6 +208,8 @@ describe FileProcessor::CSV do
 
         context "and no look-ahead is used" do
           let(:options)  { { row_sep: "\n" } }
+
+          its(:detected_encoding) { should eq(Encoding.find('iso-8859-1')) }
 
           it "properly detects it, transcoding it to utf-8" do
             processor.encoding.should eq(Encoding.find('utf-8'))
