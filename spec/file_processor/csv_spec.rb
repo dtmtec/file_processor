@@ -170,19 +170,33 @@ describe FileProcessor::CSV do
       let(:filename) { fixture('base-utf-8.csv') }
       let(:options) { { encoding: 'utf-8' } }
 
+      its(:detected_encoding) { should eq(Encoding.find(options[:encoding])) }
+
       it "opens the file properly" do
         expect {
           processor
         }.to_not raise_error
       end
 
-      context "and it is ISO-8859-1" do
+      context "and the file is ISO-8859-1" do
         let(:filename) { fixture('base-iso-8859-1.csv') }
 
-        it "uses it to open the file" do
+        it "uses it to open the file, raising an error" do
           expect {
             processor
-          }.to_not raise_error
+          }.to raise_error
+        end
+
+        context "but the given encoding is ISO-8859-1" do
+          let(:options) { { encoding: 'ISO-8859-1' } }
+
+          its(:detected_encoding) { should eq(Encoding.find(options[:encoding])) }
+
+          it "opens the file properly" do
+            expect {
+              processor
+            }.to_not raise_error
+          end
         end
       end
     end

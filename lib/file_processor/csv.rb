@@ -27,6 +27,8 @@ module FileProcessor
       @options      = default_options.merge(options)
 
       @options[:encoding] ||= detect_encoding
+      @detected_encoding  ||= Encoding.find(@options[:encoding])
+
       tempfile.reopen(detected_mode) if tempfile.closed?
 
       @options[:col_sep]  ||= detect_column_separator
