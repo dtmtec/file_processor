@@ -1,6 +1,9 @@
 # FileProcessor
 
-[![Build Status](https://travis-ci.org/dtmconsultoria/file_processor.png)](https://travis-ci.org/dtmconsultoria/file_processor)
+[![build status][1]][2]
+
+[1]: https://travis-ci.org/dtmtec/file_processor.png?branch=master
+[2]: http://travis-ci.org/dtmtec/file_processor
 
 A more powerful CSV file processor
 
