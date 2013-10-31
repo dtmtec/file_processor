@@ -5,6 +5,11 @@ SimpleCov.start
 
 Bundler.require :default
 
+begin
+  require 'debugger'
+rescue LoadError
+end
+
 root = File.expand_path('../..', __FILE__)
 
 Dir[File.join(root, "spec/support/**/*.rb")].each { |f| require f }
