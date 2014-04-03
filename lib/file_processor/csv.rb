@@ -120,15 +120,14 @@ module FileProcessor
         tempfile.write(line)
       end
     ensure
-      tempfile.close
-      loaded_io.close
+      tempfile.close if tempfile
+      loaded_io.close if loaded_io
       Encoding.default_internal = @original_default_internal
     end
 
     def decompress(loaded_io)
       if detect_compression? || gzipped?
-        Zlib::GzipReader.open(loaded_io).tap do |decompressed_io|
-          decompressed_io.getc # attempt to read from a compressed io
+        Zlib::GzipReader.new(loaded_io).tap do
           @gzipped = true
         end
       else
