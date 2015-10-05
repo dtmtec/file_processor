@@ -7,14 +7,14 @@ describe FileProcessor::CSV do
   subject(:processor) { FileProcessor::CSV.new(filename, options) }
 
   it "delegates to a CSV instance" do
-    processor.__getobj__.should be_a(::CSV)
+    expect(processor.__getobj__).to be_a(::CSV)
   end
 
   describe "#col_sep" do
     context "when it is not given" do
       context "and the first line of the file has more than one header column separated with a semi-colon" do
         it "detects it properly" do
-          processor.col_sep.should eq(';')
+          expect(processor.col_sep).to eq(';')
         end
       end
 
@@ -22,7 +22,7 @@ describe FileProcessor::CSV do
         let(:filename) { fixture('base-with-comma-separated-header.csv') }
 
         it "detects it properly" do
-          processor.col_sep.should eq(',')
+          expect(processor.col_sep).to eq(',')
         end
       end
 
@@ -30,7 +30,7 @@ describe FileProcessor::CSV do
         let(:filename) { fixture('base-with-unknown-column-separator.csv') }
 
         it "does not detects it, falling back to the default one" do
-          processor.col_sep.should eq(',')
+          expect(processor.col_sep).to eq(',')
         end
       end
 
@@ -39,7 +39,7 @@ describe FileProcessor::CSV do
           let(:filename) { fixture('base-non-ascii-characters-in-header-utf-8.csv') }
 
           it "detects it properly" do
-            processor.col_sep.should eq(';')
+            expect(processor.col_sep).to eq(';')
           end
         end
 
@@ -47,7 +47,7 @@ describe FileProcessor::CSV do
           let(:filename) { fixture('base-non-ascii-characters-in-header-iso-8859-1.csv') }
 
           it "detects it properly" do
-            processor.col_sep.should eq(';')
+            expect(processor.col_sep).to eq(';')
           end
         end
       end
@@ -57,21 +57,21 @@ describe FileProcessor::CSV do
       let(:options) { { col_sep: '|' } }
 
       it "uses the given col_sep" do
-        processor.col_sep.should eq('|')
+        expect(processor.col_sep).to eq('|')
       end
     end
   end
 
   describe "#count" do
     it "returns the number of rows in the CSV" do
-      processor.count.should eq(5)
+      expect(processor.count).to eq(5)
     end
 
     context "when the file has new line characters in a field, but it is properly quoted" do
       let(:filename) { fixture('base-new-line-in-field.csv') }
 
       it "returns the correct number of rows in the CSV" do
-        processor.count.should eq(3)
+        expect(processor.count).to eq(3)
       end
     end
 
@@ -79,7 +79,7 @@ describe FileProcessor::CSV do
       let(:filename) { fixture('base-with-blank-lines.csv') }
 
       it "skips them by default" do
-        processor.count.should eq(5)
+        expect(processor.count).to eq(5)
       end
     end
 
@@ -87,14 +87,14 @@ describe FileProcessor::CSV do
       let(:filename) { fixture('base-with-lines-with-no-data.csv') }
 
       it "does not count them" do
-        processor.count.should eq(5)
+        expect(processor.count).to eq(5)
       end
 
       context "but skip_blanks is false" do
         let(:options) { { skip_blanks: false } }
 
         it "does counts them" do
-          processor.count.should eq(7)
+          expect(processor.count).to eq(7)
         end
       end
 
@@ -102,7 +102,7 @@ describe FileProcessor::CSV do
         let(:options) { { headers: true } }
 
         it "does not count these lines, as well as the header" do
-          processor.count.should eq(4)
+          expect(processor.count).to eq(4)
         end
       end
     end
@@ -111,7 +111,7 @@ describe FileProcessor::CSV do
       let(:filename) { fixture('base-with-lines-with-no-data.csv') }
 
       it "returns the number of lines for which the block evaluates to true, properly handling lines with no data" do
-        processor.count { |row| !row.first.nil? }.should eq(3)
+        expect(processor.count { |row| !row.first.nil? }).to eq(3)
       end
     end
   end
@@ -119,13 +119,13 @@ describe FileProcessor::CSV do
   describe "#total_count" do
     it "works as count, but returns all rows, even when called multiple times, since it rewinds the io file" do
       processor.total_count
-      processor.total_count.should eq(5)
+      expect(processor.total_count).to eq(5)
     end
   end
 
   describe "#each" do
     it "returns an enumerator when called without a block" do
-      processor.each.should be_a(Enumerator)
+      expect(processor.each).to be_a(Enumerator)
     end
 
     context "when the file has lines with no data" do
@@ -170,7 +170,9 @@ describe FileProcessor::CSV do
       let(:filename) { fixture('base-utf-8.csv') }
       let(:options) { { encoding: 'utf-8' } }
 
-      its(:detected_encoding) { should eq(Encoding.find(options[:encoding])) }
+      it "returns the proper detected encoding" do
+        expect(processor.detected_encoding).to eq(Encoding.find(options[:encoding]))
+      end
 
       it "opens the file properly" do
         expect {
@@ -184,13 +186,15 @@ describe FileProcessor::CSV do
         it "uses it to open the file, raising an error" do
           expect {
             processor
-          }.to raise_error
+          }.to raise_error(ArgumentError)
         end
 
         context "but the given encoding is ISO-8859-1" do
           let(:options) { { encoding: 'ISO-8859-1' } }
 
-          its(:detected_encoding) { should eq(Encoding.find(options[:encoding])) }
+          it "returns the proper detected encoding" do
+            expect(processor.detected_encoding).to eq(Encoding.find(options[:encoding]))
+          end
 
           it "opens the file properly" do
             expect {
@@ -202,20 +206,24 @@ describe FileProcessor::CSV do
     end
 
     context "when the file is in US-ASCII" do
-      its(:detected_encoding) { should eq(Encoding.find('utf-8')) }
+      it "returns the proper detected encoding" do
+        expect(processor.detected_encoding).to eq(Encoding.find('utf-8'))
+      end
 
       it "reads it with utf-8" do
-        processor.encoding.should eq(Encoding.find('utf-8'))
+        expect(processor.encoding).to eq(Encoding.find('utf-8'))
       end
     end
 
     context "when the file can be read in utf-8" do
       let(:filename) { fixture('base-utf-8.csv') }
 
-      its(:detected_encoding) { should eq(Encoding.find('utf-8')) }
+      it "returns the proper detected encoding" do
+        expect(processor.detected_encoding).to eq(Encoding.find('utf-8'))
+      end
 
       it "properly detects it" do
-        processor.encoding.should eq(Encoding.find('utf-8'))
+        expect(processor.encoding).to eq(Encoding.find('utf-8'))
       end
 
       it "can iterate through all of its contents without raising an error" do
@@ -229,10 +237,12 @@ describe FileProcessor::CSV do
       context "but it can be read in iso-8859-1" do
         let(:filename) { fixture('base-iso-8859-1.csv') }
 
-        its(:detected_encoding) { should eq(Encoding.find('iso-8859-1')) }
+        it "returns the proper detected encoding" do
+          expect(processor.detected_encoding).to eq(Encoding.find('iso-8859-1'))
+        end
 
         it "properly detects it, transcoding it to utf-8" do
-          processor.encoding.should eq(Encoding.find('utf-8'))
+          expect(processor.encoding).to eq(Encoding.find('utf-8'))
         end
 
         it "can iterate through all of its contents without raising an error" do
@@ -244,10 +254,12 @@ describe FileProcessor::CSV do
         context "and no look-ahead is used" do
           let(:options)  { { row_sep: "\n" } }
 
-          its(:detected_encoding) { should eq(Encoding.find('iso-8859-1')) }
+          it "returns the proper detected encoding" do
+            expect(processor.detected_encoding).to eq(Encoding.find('iso-8859-1'))
+          end
 
           it "properly detects it, transcoding it to utf-8" do
-            processor.encoding.should eq(Encoding.find('utf-8'))
+            expect(processor.encoding).to eq(Encoding.find('utf-8'))
           end
 
           it "can iterate through all of its contents without raising an error" do
@@ -264,19 +276,19 @@ describe FileProcessor::CSV do
     let(:filename) { fixture('base.csv.gz') }
 
     it "detects that the file is gzipped and decompress it" do
-      processor.shift.should eq(['A', 'B', 'C']) # first line decompressed
+      expect(processor.shift).to eq(['A', 'B', 'C']) # first line decompressed
     end
 
-    it { should be_gzipped }
+    it { is_expected.to be_gzipped }
 
     context "when the file is in ISO-8859-1 encoding" do
       let(:filename) { fixture('base-iso-8859-1.csv.gz') }
 
       it "detects that the file is gzipped and decompress it" do
-        processor.shift.should eq(['A', 'B', 'C']) # first line decompressed
+        expect(processor.shift).to eq(['A', 'B', 'C']) # first line decompressed
       end
 
-      it { should be_gzipped }
+      it { is_expected.to be_gzipped }
     end
 
     context "when { gzipped: false } options is passed" do
@@ -285,7 +297,7 @@ describe FileProcessor::CSV do
       context "and the file is not gzipped" do
         let(:filename) { fixture('base.csv') }
 
-        it { should_not be_gzipped }
+        it { is_expected.to_not be_gzipped }
 
         it "does not raise an error" do
           expect {
@@ -296,7 +308,7 @@ describe FileProcessor::CSV do
 
       context "and the file is gzipped" do
         it "does not attempt to detect it, reading data as it were UTF-8" do
-          processor.shift.should_not eq(['A', 'B', 'C'])
+          expect(processor.shift).to_not eq(['A', 'B', 'C'])
         end
       end
     end
@@ -307,7 +319,7 @@ describe FileProcessor::CSV do
       context "and the file is not gzipped" do
         let(:filename) { fixture('base.csv') }
 
-        it { should_not be_gzipped }
+        it { is_expected.to_not be_gzipped }
 
         it "does not raise an error" do
           expect {
@@ -318,7 +330,7 @@ describe FileProcessor::CSV do
 
       context "and the file is gzipped" do
         it "properly assumes that the file is gzipped and decompress it" do
-          processor.shift.should eq(['A', 'B', 'C']) # first line decompressed
+          expect(processor.shift).to eq(['A', 'B', 'C']) # first line decompressed
         end
       end
     end
@@ -430,11 +442,11 @@ describe FileProcessor::CSV do
 
   describe ".open" do
     subject(:processor) { double(FileProcessor::CSV, close: true) }
-    before { FileProcessor::CSV.stub(:new).with(filename, options).and_return(processor) }
+    before { allow(FileProcessor::CSV).to receive(:new).with(filename, options).and_return(processor) }
 
     context "without a block" do
       it "creates a new instance and returns it" do
-        FileProcessor::CSV.open(filename, options).should eq(processor)
+        expect(FileProcessor::CSV.open(filename, options)).to eq(processor)
       end
     end
 

@@ -6,12 +6,12 @@ gemspec
 gem 'rake'
 
 group(:development) do
-  gem 'debugger'
+  gem 'byebug'
 end
 
 group(:test) do
-  gem 'rspec', "~> 2.14.0.rc1"
+  gem 'rspec'
   gem 'simplecov'
-  gem 'json', '~> 1.7.7'
+  gem 'json'
 end
 

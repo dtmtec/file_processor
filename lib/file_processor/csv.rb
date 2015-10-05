@@ -113,16 +113,12 @@ module FileProcessor
       loaded_io = decompress(::Kernel.open(filename, 'rb', open_options || {}))
       loaded_io.rewind
 
-      @original_default_internal = Encoding.default_internal
-      Encoding.default_internal = nil
-
       loaded_io.each do |line|
         tempfile.write(line)
       end
     ensure
       tempfile.close if tempfile
       loaded_io.close if loaded_io
-      Encoding.default_internal = @original_default_internal
     end
 
     def decompress(loaded_io)
