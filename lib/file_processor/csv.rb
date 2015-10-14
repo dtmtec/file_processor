@@ -113,6 +113,9 @@ module FileProcessor
       loaded_io = decompress(::Kernel.open(filename, 'rb', open_options || {}))
       loaded_io.rewind
 
+      tempfile.reopen("w:#{loaded_io.getc.encoding}")
+      loaded_io.rewind
+
       loaded_io.each do |line|
         tempfile.write(line)
       end
